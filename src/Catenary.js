@@ -1,56 +1,67 @@
-import { RADIUS_DEFAULT } from './settings'
-// import { RADIUS_DEFAULT } from './tools'
 import Point from './Point'
 
-const SEGMENTS = 50
-const EPSILON = 1e-6
+const EPSILON = Number.EPSILON
+const LIMIT = 500
 
 class Catenary {
   /**
    * constructor
    *
    * @param {object} settings
-   * @param {number} settings.radius The radius for the lazy area
-   * @param {boolean} settings.enabled
+   * @param {number} settings.chainLength The length for the chain
+   * @param {(number|string)} settings.segments Number of segments of the chain. 'auto' will adjust segments in relation to chainLength
+   * @param {number} settings.iterationLimit Max amount iterations for getting catenary parameters
    */
-  constructor (context) {
+  constructor ({ chainLength = 200, segments = 'auto', iterationLimit = 'auto' } = {}) {
     this.p1 = new Point()
     this.p2 = new Point()
 
-    this.context = context
+    this.chainLength = chainLength
 
-    this.length = 50
+    this._segments = segments
+    this._iterationLimit = iterationLimit
   }
 
-  drawToCanvas (p1, p2, length, context) {
+  get segments () {
+    return this._segments === 'auto' ? this.chainLength / 10 : this._segments
+  }
+
+  get iterationLimit () {
+    return this._iterationLimit === 'auto' ? this.chainLength / 10 : this._iterationLimit
+  }
+
+  drawToCanvas (context, p1, p2) {
     this.p1.update(p1)
     this.p2.update(p2)
     const distance = this.p1.getDistanceTo(p2)
 
-    const catenaryLength = length - (10 * distance / length)
+    console.log(this.chainLength)
 
-    this.calculateCatenary(this.p1, this.p2, distance, catenaryLength, context)
+    this.calculateCatenary(this.p1, this.p2, this.chainLength, context)
   }
 
-  calculateCatenary (point1, point2, distance, length, context) {
+  calculateCatenary (point1, point2, chainLength, context) {
     const isFlipped = point1.x > point2.x
 
     const p1 = isFlipped ? point2 : point1
     const p2 = isFlipped ? point1 : point2
 
-    if (distance < length) {
-      if (p2.x - p1.x > 0.01) {
+    const distance = p1.getDistanceTo(p2)
+
+    if (distance < chainLength) {
+      const diff = p2.x - p1.x
+      if (diff >= 0.01) {
         let d = p2.x - p1.x
         let h = p2.y - p1.y
-        let a = -this.getCatenaryParameter(d, h, length)
-        let x = (a * Math.log((length + h) / (length - h)) - d) * 0.5
+        let a = -this.getCatenaryParameter(d, h, chainLength)
+        let x = (a * Math.log((chainLength + h) / (chainLength - h)) - d) * 0.5
         let y = a * Math.cosh(x / a)
         let offsetX = p1.x - x
         let offsetY = p1.y - y
-        this.curve = this.drawCatenary(a, p1, p2, offsetX, offsetY, context)
+        this.curve = this.drawCatenary(a, p1, p2, offsetX, offsetY, context, this.segments)
       } else {
         let mx = (p1.x + p2.x) * 0.5
-        let my = (p1.y + p2.y + length) * 0.5
+        let my = (p1.y + p2.y + chainLength) * 0.5
 
         context.moveTo(p1.x, p1.y)
         context.lineTo(mx, my)
@@ -67,7 +78,7 @@ class Catenary {
     let x = Math.acosh(m) + 1
     let prevx = -1
     let count = 0
-    while (Math.abs(x - prevx) > EPSILON && count < 130) {
+    while (Math.abs(x - prevx) > 0 && count < LIMIT) {
       prevx = x
       x = x - (Math.sinh(x) - m * x) / (Math.cosh(x) - m)
       count++
@@ -75,10 +86,10 @@ class Catenary {
     return d / (2 * x)
   }
 
-  drawCatenary (a, p1, p2, offsetX, offsetY, context) {
+  drawCatenary (a, p1, p2, offsetX, offsetY, context, segments) {
     let data = [p1.x, a * Math.cosh((p1.x - offsetX) / a) + offsetY]
-    let d = p2.x - p1.x
-    let length = SEGMENTS - 1
+    const d = p2.x - p1.x
+    const length = segments - 1
 
     for (let i = 0; i < length; i++) {
       let x = p1.x + d * (i + 0.5) / length
