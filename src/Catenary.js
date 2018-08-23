@@ -1,7 +1,6 @@
 import Point from './Point'
 
 const EPSILON = Number.EPSILON
-const LIMIT = 500
 
 class Catenary {
   /**
@@ -48,46 +47,64 @@ class Catenary {
 
     const distance = p1.getDistanceTo(p2)
 
+    let curveData = []
+    let isStraight = true
+
     if (distance < chainLength) {
       const diff = p2.x - p1.x
+
       if (diff >= 0.01) {
         let d = p2.x - p1.x
         let h = p2.y - p1.y
-        let a = -this.getCatenaryParameter(d, h, chainLength)
+        let a = -this.getCatenaryParameter(d, h, chainLength, this.iterationLimit)
         let x = (a * Math.log((chainLength + h) / (chainLength - h)) - d) * 0.5
         let y = a * Math.cosh(x / a)
         let offsetX = p1.x - x
         let offsetY = p1.y - y
-        this.curve = this.drawCatenary(a, p1, p2, offsetX, offsetY, context, this.segments)
+        curveData = this.getCurve(a, p1, p2, offsetX, offsetY, this.segments)
+        isStraight = false
       } else {
         let mx = (p1.x + p2.x) * 0.5
         let my = (p1.y + p2.y + chainLength) * 0.5
 
-        context.moveTo(p1.x, p1.y)
-        context.lineTo(mx, my)
-        context.lineTo(p2.x, p2.y)
+        curveData = [
+          [p1.x, p1.y],
+          [mx, my],
+          [p2.x, p2.y]
+        ]
       }
     } else {
-      context.moveTo(p1.x, p1.y)
-      context.lineTo(p2.x, p2.y)
+      curveData = [
+        [p1.x, p1.y],
+        [p2.x, p2.y]
+      ]
+    }
+
+    if (isStraight) {
+      this.drawLine(curveData, context)
+    } else {
+      this.drawCurve(curveData, context)
     }
   }
 
-  getCatenaryParameter (d, h, length) {
+  getCatenaryParameter (d, h, length, limit) {
     let m = Math.sqrt(length * length - h * h) / d
     let x = Math.acosh(m) + 1
     let prevx = -1
     let count = 0
-    while (Math.abs(x - prevx) > 0 && count < LIMIT) {
+
+    while (Math.abs(x - prevx) > 0 && count < limit) {
       prevx = x
       x = x - (Math.sinh(x) - m * x) / (Math.cosh(x) - m)
       count++
     }
+
     return d / (2 * x)
   }
 
-  drawCatenary (a, p1, p2, offsetX, offsetY, context, segments) {
+  getCurve (a, p1, p2, offsetX, offsetY, segments) {
     let data = [p1.x, a * Math.cosh((p1.x - offsetX) / a) + offsetY]
+
     const d = p2.x - p1.x
     const length = segments - 1
 
@@ -99,7 +116,13 @@ class Catenary {
 
     data.push(p2.x, a * Math.cosh((p2.x - offsetX) / a) + offsetY)
 
-    this.drawCurve(data, context)
+    return data
+  }
+
+  drawLine (data, context) {
+    context.moveTo(data[0][0], data[0][1])
+
+    context.lineTo(data[1][0], data[1][1])
   }
 
   drawCurve (data, context) {
