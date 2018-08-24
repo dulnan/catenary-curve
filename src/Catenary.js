@@ -34,8 +34,6 @@ class Catenary {
     this.p2.update(p2)
     const distance = this.p1.getDistanceTo(p2)
 
-    console.log(this.chainLength)
-
     this.calculateCatenary(this.p1, this.p2, this.chainLength, context)
   }
 
