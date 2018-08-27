@@ -29,6 +29,10 @@ class Catenary {
     return this._iterationLimit === 'auto' ? this.chainLength / 10 : this._iterationLimit
   }
 
+  setChainLength (length) {
+    this.chainLength = length
+  }
+
   drawToCanvas (context, p1, p2) {
     this.p1.update(p1)
     this.p2.update(p2)
@@ -51,7 +55,7 @@ class Catenary {
     if (distance < chainLength) {
       const diff = p2.x - p1.x
 
-      if (diff >= 0.01) {
+      if (diff > 0.01) {
         let d = p2.x - p1.x
         let h = p2.y - p1.y
         let a = -this.getCatenaryParameter(d, h, chainLength, this.iterationLimit)
