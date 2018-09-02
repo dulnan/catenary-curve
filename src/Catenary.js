@@ -7,38 +7,22 @@ class Catenary {
    * constructor
    *
    * @param {object} settings
-   * @param {number} settings.chainLength The length for the chain
    * @param {(number|string)} settings.segments Number of segments of the chain. 'auto' will adjust segments in relation to chainLength
    * @param {number} settings.iterationLimit Max amount iterations for getting catenary parameters
    */
-  constructor ({ chainLength = 200, segments = 'auto', iterationLimit = 'auto' } = {}) {
+  constructor ({ segments = 50, iterationLimit = 50 } = {}) {
     this.p1 = new Point()
     this.p2 = new Point()
 
-    this.chainLength = chainLength
-
-    this._segments = segments
-    this._iterationLimit = iterationLimit
+    this.segments = segments
+    this.iterationLimit = iterationLimit
   }
 
-  get segments () {
-    return this._segments === 'auto' ? this.chainLength / 10 : this._segments
-  }
-
-  get iterationLimit () {
-    return this._iterationLimit === 'auto' ? this.chainLength / 10 : this._iterationLimit
-  }
-
-  setChainLength (length) {
-    this.chainLength = length
-  }
-
-  drawToCanvas (context, p1, p2) {
+  drawToCanvas (context, p1, p2, chainLength) {
     this.p1.update(p1)
     this.p2.update(p2)
-    const distance = this.p1.getDistanceTo(p2)
 
-    this.calculateCatenary(this.p1, this.p2, this.chainLength, context)
+    return this.calculateCatenary(this.p1, this.p2, chainLength, context)
   }
 
   calculateCatenary (point1, point2, chainLength, context) {
@@ -87,6 +71,8 @@ class Catenary {
     } else {
       this.drawCurve(curveData, context)
     }
+
+    return curveData
   }
 
   getCatenaryParameter (d, h, length, limit) {
@@ -132,6 +118,8 @@ class Catenary {
     let ox = data[2]
     let oy = data[3]
 
+    let temp = []
+
     context.moveTo(data[0], data[1])
 
     for (let i = 2; i < length; i++) {
@@ -139,6 +127,7 @@ class Catenary {
       let y = data[i * 2 + 1]
       let mx = (x + ox) * 0.5
       let my = (y + oy) * 0.5
+      temp.push([ox,oy,mx,my])
       context.quadraticCurveTo(ox, oy, mx, my)
       ox = x
       oy = y
@@ -146,6 +135,8 @@ class Catenary {
 
     length = data.length
     context.quadraticCurveTo(data[length - 4], data[length - 3], data[length - 2], data[length - 1])
+
+    return temp
   }
 }
 
