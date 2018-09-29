@@ -33,5 +33,6 @@ context.stroke()
 
 The basis of this library is an ActionScript by poiasd, originally released on
 wonderfl.net, archived and preserved at http://wa.zozuar.org/code.php?c=8Bnl.
+
 Unfortunately I wasn't able to find out who the original author was and ask
 them if and how they want to be mentioned/linked.
