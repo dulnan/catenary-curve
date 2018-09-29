@@ -1,7 +1,7 @@
 {
   "name": "catenary-curve",
-  "version": "0.0.1",
-  "description": "Calculate the perfect catenary of two points",
+  "version": "1.0.0",
+  "description": "Calculate the perfect catenary between two points",
   "main": "lib/index.js",
   "keywords": [
     "catenary",
@@ -9,7 +9,8 @@
     "chain",
     "cable",
     "points",
-    "two"
+    "curve",
+    "rope"
   ],
   "repository": "https://github.com/dulnan/catenary-curve",
   "directories": {
@@ -18,7 +19,6 @@
   "scripts": {
     "build": "babel src --presets babel-preset-env --out-dir lib",
     "test": "mocha --require babel-register --colors",
-    "dev": "echo \"Error: no dev stuff specifried\" && exit 1",
     "prepublish": "npm run build",
     "prepare": "npm run build"
   },
