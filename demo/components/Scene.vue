@@ -8,7 +8,7 @@
         v-for="(ball, i) in balls"
         :key="i"
         :point="ball"
-        @update="updatePoint(i, $event, ball.d)"
+        @update="updatePoint(i, $event)"
       />
     </div>
   </div>
@@ -16,7 +16,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
-import { Point, drawCatenaryCurve } from './../..'
+import { Point, drawCatenaryCurve } from './../../src/main'
 import DraggablePoint from './Point.vue'
 
 const props = defineProps({
@@ -27,6 +27,14 @@ const props = defineProps({
   iterationLimit: {
     type: Number,
     default: 50
+  },
+  chainLength: {
+    type: Number,
+    default: 400
+  },
+  drawLineSegments: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -60,7 +68,7 @@ function getDistanceBetweenPoints(p1: Point, p2: Point): number {
   return Math.sqrt(Math.pow(diff.x, 2) + Math.pow(diff.y, 2))
 }
 
-const balls = ref<Ball[]>([])
+const balls = ref<Point[]>([])
 const width = ref(0)
 const height = ref(0)
 const dpi = ref(0)
@@ -76,14 +84,13 @@ function createBalls() {
   for (let i = 0; i < TOTAL_BALLS; i++) {
     balls.value.push({
       x: (i / (TOTAL_BALLS - 1)) * (width.value - PADDING) + PADDING / 2,
-      y: height.value / 3,
-      d: height.value + i * 200
+      y: height.value / 3
     })
   }
 }
 
-function updatePoint(index: number, newPoint: Ball, d: number) {
-  balls.value[index] = { x: newPoint.x - offsetX.value, y: newPoint.y, d }
+function updatePoint(index: number, newPoint: Ball) {
+  balls.value[index] = { x: newPoint.x - offsetX.value, y: newPoint.y }
   raf = requestAnimationFrame(loop)
 }
 
@@ -96,11 +103,14 @@ function loop() {
     const p2 = balls.value[i]
     const distance = getDistanceBetweenPoints(p1, p2)
 
-    const pullOffset = Math.max(distance - p1.d, -0.1)
-    const stretchFactor = pullOffset / p1.d + 1
+    const pullOffset = Math.max(distance - props.chainLength, -0.1)
+    const stretchFactor = pullOffset / props.chainLength + 1
     ctx.beginPath()
-    ctx.setLineDash([10 * stretchFactor, 30])
-    drawCatenaryCurve(ctx, p1, p2, p1.d, props.segments, props.iterationLimit)
+    drawCatenaryCurve(ctx, p1, p2, props.chainLength, {
+      segments: props.segments,
+      iterationLimit: props.iterationLimit,
+      drawLineSegments: props.drawLineSegments
+    })
     ctx.stroke()
   }
 }

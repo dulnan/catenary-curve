@@ -33,6 +33,11 @@ export interface CatenaryOptions {
    * Maximum amount iterations for getting catenary parameters.
    */
   iterationLimit?: number
+
+  /**
+   * Draws the individual segments as straight lines instead of curves.
+   */
+  drawLineSegments?: boolean
 }
 
 const EPSILON = 1e-6
@@ -62,8 +67,10 @@ function getCurve(
   offsetY: number,
   // How many "parts" the chain should be made of.
   segments: number
-): number[] {
-  const data = [p1.x, a * Math.cosh((p1.x - offsetX) / a) + offsetY]
+): number[][] {
+  const data: number[][] = [
+    [p1.x, a * Math.cosh((p1.x - offsetX) / a) + offsetY]
+  ]
 
   const d = p2.x - p1.x
   const length = segments - 1
@@ -71,10 +78,10 @@ function getCurve(
   for (let i = 0; i < length; i++) {
     const x = p1.x + (d * (i + 0.5)) / length
     const y = a * Math.cosh((x - offsetX) / a) + offsetY
-    data.push(x, y)
+    data.push([x, y])
   }
 
-  data.push(p2.x, a * Math.cosh((p2.x - offsetX) / a) + offsetY)
+  data.push([p2.x, a * Math.cosh((p2.x - offsetX) / a) + offsetY])
 
   return data
 }
@@ -88,8 +95,10 @@ function drawLine(
   data: number[][],
   context: CanvasRenderingContext2D
 ): number[][] {
-  context.moveTo(data[0][0], data[0][1])
-  context.lineTo(data[1][0], data[1][1])
+  for (let i = 0; i < data.length - 1; i++) {
+    context.moveTo(data[i][0], data[i][1])
+    context.lineTo(data[i + 1][0], data[i + 1][1])
+  }
   return data
 }
 /**
@@ -130,20 +139,20 @@ function getCatenaryParameter(
  * @returns {Array} The original segment coordinates.
  */
 function drawCurve(
-  data: number[],
+  data: number[][],
   context: CanvasRenderingContext2D
 ): number[][] {
-  let length: number = data.length * 0.5 - 1
-  let ox: number = data[2]
-  let oy: number = data[3]
+  let length: number = data.length - 1
+  let ox: number = data[1][0]
+  let oy: number = data[1][1]
 
   let temp: number[][] = []
 
-  context.moveTo(data[0], data[1])
+  context.moveTo(data[0][0], data[0][1])
 
   for (let i = 2; i < length; i++) {
-    const x = data[i * 2]
-    const y = data[i * 2 + 1]
+    const x = data[i][0]
+    const y = data[i][1]
     const mx = (x + ox) * 0.5
     const my = (y + oy) * 0.5
     temp.push([ox, oy, mx, my])
@@ -154,10 +163,10 @@ function drawCurve(
 
   length = data.length
   context.quadraticCurveTo(
-    data[length - 4],
-    data[length - 3],
-    data[length - 2],
-    data[length - 1]
+    data[length - 2][0],
+    data[length - 2][1],
+    data[length - 1][0],
+    data[length - 1][1]
   )
 
   return temp
@@ -184,9 +193,12 @@ export function drawCatenaryCurve(
   point1: Point,
   point2: Point,
   chainLength: number,
-  segments = 50,
-  iterationLimit = 50
+  options: CatenaryOptions = {}
 ): number[] | number[][] {
+  const segments = options.segments || 20
+  const iterationLimit = options.segments || 10
+  const drawLineSegments = !!options.drawLineSegments
+
   const isFlipped = point1.x > point2.x
 
   const p1 = isFlipped ? point2 : point1
@@ -210,7 +222,11 @@ export function drawCatenaryCurve(
       const offsetX = p1.x - x
       const offsetY = p1.y - y
       const curveData = getCurve(a, p1, p2, offsetX, offsetY, segments)
-      return drawCurve(curveData, context)
+      if (drawLineSegments) {
+        return drawLine(curveData, context)
+      } else {
+        return drawCurve(curveData, context)
+      }
     }
 
     const mx = (p1.x + p2.x) * 0.5

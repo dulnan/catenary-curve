@@ -9,7 +9,7 @@
         type="number"
         :value="value"
         @input="$emit('update:modelValue', getSliderValue($event))"
-        class="appearance-none outline-none h-6 w-10 bg-transparent text-right -mr-3"
+        class="appearance-none outline-none h-6 w-14 bg-transparent text-right -mr-3"
       />
     </div>
     <p
