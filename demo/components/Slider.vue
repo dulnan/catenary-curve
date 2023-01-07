@@ -1,7 +1,7 @@
 <template>
   <div
-    class="pt-[23px] pb-6 px-6 border-t border-stone-300 relative group hover:border-solid hover:bg-stone-50"
-    :class="{ 'text-stone-300 pointer-events-none': disabled }"
+    class="pt-[23px] pb-6 px-6 border-t border-gray-300 relative group hover:border-solid hover:bg-gray-50"
+    :class="{ 'text-gray-300 pointer-events-none': disabled }"
   >
     <div class="flex justify-between">
       <label class="uppercase font-bold" :for="id">{{ label }}</label>
@@ -14,7 +14,7 @@
     </div>
     <p
       class="text-xs mt-3 mb-3"
-      :class="disabled ? 'text-stone-300' : 'text-stone-800'"
+      :class="disabled ? 'text-gray-300' : 'text-gray-800'"
     >
       {{ description }}
     </p>

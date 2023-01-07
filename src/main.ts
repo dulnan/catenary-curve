@@ -95,9 +95,9 @@ function drawLine(
   data: number[][],
   context: CanvasRenderingContext2D
 ): number[][] {
-  for (let i = 0; i < data.length - 1; i++) {
-    context.moveTo(data[i][0], data[i][1])
-    context.lineTo(data[i + 1][0], data[i + 1][1])
+  context.moveTo(data[0][0], data[0][1])
+  for (let i = 1; i < data.length; i++) {
+    context.lineTo(data[i][0], data[i][1])
   }
   return data
 }
@@ -196,7 +196,7 @@ export function drawCatenaryCurve(
   options: CatenaryOptions = {}
 ): number[] | number[][] {
   const segments = options.segments || 20
-  const iterationLimit = options.segments || 10
+  const iterationLimit = options.iterationLimit || 10
   const drawLineSegments = !!options.drawLineSegments
 
   const isFlipped = point1.x > point2.x
@@ -216,17 +216,24 @@ export function drawCatenaryCurve(
     if (diff > 0.01) {
       const h = p2.x - p1.x
       const v = p2.y - p1.y
+
       const a = -getCatenaryParameter(h, v, chainLength, iterationLimit)
       const x = (a * Math.log((chainLength + v) / (chainLength - v)) - h) * 0.5
       const y = a * Math.cosh(x / a)
+
       const offsetX = p1.x - x
       const offsetY = p1.y - y
       const curveData = getCurve(a, p1, p2, offsetX, offsetY, segments)
-      if (drawLineSegments) {
-        return drawLine(curveData, context)
-      } else {
-        return drawCurve(curveData, context)
+      if (isFlipped) {
+        curveData.reverse()
       }
+      context.beginPath()
+      if (drawLineSegments) {
+        drawLine(curveData, context)
+      } else {
+        drawCurve(curveData, context)
+      }
+      return curveData
     }
 
     const mx = (p1.x + p2.x) * 0.5

@@ -19,7 +19,7 @@
         description="The maximum iterations to determine the catenary parameter."
         id="iterationLimit"
         :min="1"
-        :max="50"
+        :max="15"
       />
       <Slider
         v-model="chainLength"
@@ -47,8 +47,8 @@ import Slider from './components/Slider.vue'
 import Toggle from './components/Toggle.vue'
 import Scene from './components/Scene.vue'
 
-const segments = ref(3)
-const iterationLimit = ref(5)
-const chainLength = ref(800)
-const drawLineSegments = ref(false)
+const segments = ref(200)
+const iterationLimit = ref(8)
+const chainLength = ref(1800)
+const drawLineSegments = ref(true)
 </script>

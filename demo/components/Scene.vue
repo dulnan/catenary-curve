@@ -1,5 +1,8 @@
 <template>
-  <div class="relative z-10 w-full h-canvas md:h-full" ref="container">
+  <div
+    class="relative z-10 w-full h-canvas md:h-full overflow-hidden"
+    ref="container"
+  >
     <canvas class="canvas z-40" ref="canvas"></canvas>
     <div class="canvas z-10" ref="grid"></div>
     <canvas class="hidden" ref="canvasGrid"></canvas>
@@ -84,7 +87,7 @@ function createBalls() {
   for (let i = 0; i < TOTAL_BALLS; i++) {
     balls.value.push({
       x: (i / (TOTAL_BALLS - 1)) * (width.value - PADDING) + PADDING / 2,
-      y: height.value / 3
+      y: height.value / 3 + 200 * Math.sin(i * TOTAL_BALLS)
     })
   }
 }
@@ -105,12 +108,37 @@ function loop() {
 
     const pullOffset = Math.max(distance - props.chainLength, -0.1)
     const stretchFactor = pullOffset / props.chainLength + 1
+
+    // Create the catenary path.
     ctx.beginPath()
     drawCatenaryCurve(ctx, p1, p2, props.chainLength, {
       segments: props.segments,
       iterationLimit: props.iterationLimit,
       drawLineSegments: props.drawLineSegments
     })
+
+    // Draw rope.
+    ctx.setLineDash([20])
+    ctx.lineWidth = 4
+    ctx.lineDashOffset = 20
+    ctx.strokeStyle = '#cbd5e1'
+    ctx.stroke()
+
+    // Draw ball connectors.
+    ctx.setLineDash([20])
+    ctx.lineWidth = 3
+    ctx.lineDashOffset = 0
+    ctx.strokeStyle = '#9ca3af'
+    ctx.strokeStyle = 'white'
+    ctx.lineCap = 'round'
+    ctx.stroke()
+
+    // Draw balls.
+    ctx.setLineDash([0, 40])
+    ctx.lineWidth = 13
+    ctx.lineDashOffset = 30
+    ctx.strokeStyle = '#0c4a6e'
+    ctx.lineCap = 'round'
     ctx.stroke()
   }
 }
@@ -134,8 +162,7 @@ function setSizes() {
   const ctx = canvas.value.getContext('2d')
   ctx.scale(targetDpi, targetDpi)
   ctx.lineWidth = 5
-  ctx.lineCap = 'round'
-  ctx.strokeStyle = 'black'
+  ctx.lineCap = 'square'
 }
 
 /**
@@ -149,7 +176,7 @@ function drawGrid() {
   const ctx = canvasGrid.value.getContext('2d')
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
 
-  ctx.strokeStyle = 'rgb(214, 211, 209)'
+  ctx.strokeStyle = '#d1d5db'
   ctx.lineWidth = dpi.value
 
   ctx.beginPath()

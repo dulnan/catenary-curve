@@ -1,6 +1,6 @@
 <template>
   <div
-    class="w-10 h-10 rounded-full bg-orange-600 absolute -top-5 -left-5 shadow-2xl cursor-grab hover:bg-orange-800"
+    class="w-14 h-14 rounded-full bg-sky-500 absolute -top-7 -left-7 shadow-2xl cursor-grab hover:bg-sky-700"
     :style="style"
     @mousedown.prevent="onMouseDown"
   ></div>
