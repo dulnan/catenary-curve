@@ -1,8 +1,7 @@
 {
   "name": "catenary-curve",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Calculate the perfect catenary between two points",
-  "main": "lib/index.js",
   "keywords": [
     "catenary",
     "hanging",
@@ -12,23 +11,44 @@
     "curve",
     "rope"
   ],
+  "type": "module",
+  "files": [
+    "lib"
+  ],
+  "types": "./lib/main.d.ts",
+  "main": "./lib/catenary-curve.umd.cjs",
+  "module": "./lib/catenary-curve.js",
+  "exports": {
+    ".": {
+      "import": "./lib/catenary-curve.js",
+      "require": "./lib/catenary-curve.umd.cjs"
+    }
+  },
   "repository": "https://github.com/dulnan/catenary-curve",
   "directories": {
     "lib": "lib"
   },
   "scripts": {
-    "build": "babel src --presets babel-preset-env --out-dir lib",
-    "test": "mocha --require babel-register --colors",
-    "prepublish": "npm run build",
-    "prepare": "npm run build"
+    "dev": "vite -c ./vite.config-demo.ts",
+    "build": "tsc && vite build",
+    "build:demo": "vite-ssg -c ./vite.config-demo.ts build",
+    "preview": "vite -c ./vite.config-demo.ts preview"
   },
   "author": "Jan Hug <me@dulnan.net>",
   "license": "MIT",
   "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-preset-env": "^1.7.0",
-    "babel-register": "^6.26.0",
-    "chai": "^4.1.2",
-    "mocha": "^5.2.0"
+    "@types/node": "^18.11.18",
+    "@vitejs/plugin-vue": "^4.0.0",
+    "autoprefixer": "^10.4.13",
+    "catenary-curve": "^1.0.1",
+    "postcss": "^8.4.20",
+    "prettier": "^2.8.1",
+    "tailwindcss": "^3.2.4",
+    "terser": "^5.16.1",
+    "typescript": "^4.9.3",
+    "vite": "^4.0.0",
+    "vite-plugin-dts": "^1.7.1",
+    "vite-ssg": "^0.22.1",
+    "vue-tsc": "^1.0.22"
   }
 }
