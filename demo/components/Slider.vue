@@ -8,6 +8,9 @@
       <input
         type="number"
         :value="value"
+        :min="min"
+        :max="max"
+        :step="step"
         @input="$emit('update:modelValue', getSliderValue($event))"
         class="appearance-none outline-none h-6 w-14 bg-transparent text-right -mr-3"
       />
@@ -25,6 +28,7 @@
       type="range"
       :id="'slider_' + id"
       :name="id"
+      :step="step"
       :value="modelValue"
       @input="$emit('update:modelValue', getSliderValue($event))"
       @wheel.prevent="onWheel"
@@ -55,6 +59,10 @@ const props = defineProps({
     type: Number,
     default: 100
   },
+  step: {
+    type: Number,
+    default: 1
+  },
   id: {
     type: String,
     default: ''
@@ -73,7 +81,7 @@ const props = defineProps({
   }
 })
 
-const step = computed(() => {
+const wheelStep = computed(() => {
   return (props.max - props.min) / 100
 })
 
@@ -91,12 +99,12 @@ function onWheel(e: WheelEvent) {
   if (e.deltaY > 0) {
     emit(
       'update:modelValue',
-      Math.max(props.modelValue - step.value, props.min)
+      Math.max(props.modelValue - wheelStep.value, props.min)
     )
   } else {
     emit(
       'update:modelValue',
-      Math.min(props.modelValue + step.value, props.max)
+      Math.min(props.modelValue + wheelStep.value, props.max)
     )
   }
 }

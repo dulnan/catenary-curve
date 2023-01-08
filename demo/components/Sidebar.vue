@@ -8,7 +8,8 @@
       Catenary Curve
     </h1>
     <p class="mt-6 px-6">
-      JavaScript library to calculate and draw the perfect hanging rope.
+      JavaScript library to approximate and draw the path for a hanging rope
+      (catenary curve) on a HTML canvas.
     </p>
     <ul class="flex justify-between mt-6 px-6">
       <li v-for="(link, i) in links" :key="i">
@@ -27,16 +28,16 @@
 <script lang="ts" setup>
 const links = [
   {
-    href: 'https://github.com/dulnan/lazy-brush',
+    href: 'https://github.com/dulnan/catenary-curve',
     text: 'GitHub'
   },
   {
-    href: 'https://www.npmjs.com/package/lazy-brush',
+    href: 'https://www.npmjs.com/package/catenary-curve',
     text: 'npm'
   },
   {
-    href: 'https://www.reddit.com/r/javascript/comments/9paoyp/lazybrush_smooth_canvas_drawing_with_a_mouse_or',
-    text: 'Reddit'
+    href: 'https://lazybrush.dulnan.net',
+    text: 'Example'
   }
 ]
 </script>

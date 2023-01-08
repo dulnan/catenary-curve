@@ -6,6 +6,12 @@
       target="_blank"
       class="text-sky-600 font-bold uppercase underline underline-offset-4 hover:text-sky-800"
       >dulnan</a
-    >
+    >, adapted from work by
+    <a
+      class="text-sky-600 font-bold uppercase underline underline-offset-4 hover:text-sky-800"
+      href="http://wa.zozuar.org/code.php?c=8Bnl"
+      target="_blank"
+      >poiasd</a
+    >.
   </div>
 </template>

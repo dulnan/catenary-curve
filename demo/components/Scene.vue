@@ -18,8 +18,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
-import { Point, drawCatenaryCurve } from './../../src/main'
+import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue'
+import { Point, getCatenaryCurve, drawResult } from './../../src/main'
 import DraggablePoint from './Point.vue'
 
 const props = defineProps({
@@ -35,15 +35,18 @@ const props = defineProps({
     type: Number,
     default: 400
   },
-  drawLineSegments: {
+  debug: {
     type: Boolean,
     default: false
   }
 })
 
-watch(props, () => {
-  loop()
-})
+watch(
+  () => [props.chainLength, props.debug, props.iterationLimit, props.segments],
+  () => {
+    loop()
+  }
+)
 
 const container = ref(null as HTMLDivElement)
 const canvas = ref(null as HTMLCanvasElement)
@@ -76,24 +79,26 @@ const width = ref(0)
 const height = ref(0)
 const dpi = ref(0)
 
-const offsetX = ref(0)
+const PADDING = 200
 
-const TOTAL_BALLS = 3
-const PADDING = 400
+const numberOfBalls = computed(() => {
+  return Math.floor(width.value / 350) + 1
+})
 
 function createBalls() {
   balls.value = []
 
-  for (let i = 0; i < TOTAL_BALLS; i++) {
+  for (let i = 0; i < numberOfBalls.value; i++) {
     balls.value.push({
-      x: (i / (TOTAL_BALLS - 1)) * (width.value - PADDING) + PADDING / 2,
-      y: height.value / 3 + 200 * Math.sin(i * TOTAL_BALLS)
+      x:
+        (i / (numberOfBalls.value - 1)) * (width.value - PADDING) + PADDING / 2,
+      y: height.value / 4 + 200 * Math.cos(i * 1.9)
     })
   }
 }
 
 function updatePoint(index: number, newPoint: Ball) {
-  balls.value[index] = { x: newPoint.x - offsetX.value, y: newPoint.y }
+  balls.value[index] = { x: newPoint.x, y: newPoint.y }
   raf = requestAnimationFrame(loop)
 }
 
@@ -110,36 +115,67 @@ function loop() {
     const stretchFactor = pullOffset / props.chainLength + 1
 
     // Create the catenary path.
-    ctx.beginPath()
-    drawCatenaryCurve(ctx, p1, p2, props.chainLength, {
+    const result = getCatenaryCurve(p1, p2, props.chainLength, {
       segments: props.segments,
-      iterationLimit: props.iterationLimit,
-      drawLineSegments: props.drawLineSegments
+      iterationLimit: props.iterationLimit
     })
 
-    // Draw rope.
-    ctx.setLineDash([20])
-    ctx.lineWidth = 4
-    ctx.lineDashOffset = 20
-    ctx.strokeStyle = '#cbd5e1'
-    ctx.stroke()
+    if (props.debug) {
+      ctx.strokeStyle = 'red'
+      ctx.lineWidth = 1
+      ctx.setLineDash([])
+      if (result.type === 'quadraticCurve') {
+        for (let j = 0; j < result.curves.length; j++) {
+          const [cx, cy, x, y] = result.curves[j]
+          ctx.beginPath()
+          ctx.fillStyle = 'red'
+          ctx.arc(x, y, 5, 0, Math.PI * 2, true)
+          ctx.closePath()
+          ctx.fill()
 
-    // Draw ball connectors.
-    ctx.setLineDash([20])
-    ctx.lineWidth = 3
-    ctx.lineDashOffset = 0
-    ctx.strokeStyle = '#9ca3af'
-    ctx.strokeStyle = 'white'
-    ctx.lineCap = 'round'
-    ctx.stroke()
+          ctx.beginPath()
+          ctx.fillStyle = 'blue'
+          ctx.arc(cx, cy, 5, 0, Math.PI * 2, true)
+          ctx.closePath()
+          ctx.fill()
+        }
+        ctx.beginPath()
+        ctx.moveTo(...result.start)
+        for (let j = 0; j < result.curves.length; j++) {
+          const [cx, cy, x, y] = result.curves[j]
+          ctx.quadraticCurveTo(cx, cy, x, y)
+        }
+        ctx.stroke()
+        ctx.closePath()
+      }
+    } else {
+      ctx.beginPath()
+      drawResult(result, ctx)
 
-    // Draw balls.
-    ctx.setLineDash([0, 40])
-    ctx.lineWidth = 13
-    ctx.lineDashOffset = 30
-    ctx.strokeStyle = '#0c4a6e'
-    ctx.lineCap = 'round'
-    ctx.stroke()
+      // Draw rope.
+      ctx.setLineDash([])
+      ctx.lineWidth = 2 / (stretchFactor * 0.5)
+      ctx.lineDashOffset = 0
+      ctx.strokeStyle = '#0c4a6e'
+      ctx.stroke()
+
+      ctx.setLineDash([0, 40 * stretchFactor])
+      ctx.lineWidth = 17
+      ctx.lineDashOffset = 20 * stretchFactor
+      ctx.strokeStyle = '#0c4a6e'
+      ctx.lineCap = 'round'
+      ctx.stroke()
+
+      // Draw dark balls.
+      ctx.setLineDash([0, 40 * stretchFactor])
+      ctx.lineWidth = 12
+      ctx.lineDashOffset = 20 * stretchFactor
+      ctx.strokeStyle = 'white'
+      ctx.lineCap = 'round'
+      ctx.stroke()
+
+      ctx.closePath()
+    }
   }
 }
 
@@ -151,8 +187,6 @@ function setSizes() {
       ? Math.min(window.devicePixelRatio, 4)
       : window.devicePixelRatio
 
-  const rect = canvas.value.getBoundingClientRect()
-  offsetX.value = rect.left
   const targetDpi = dpi.value
   canvas.value.width = width.value * targetDpi
   canvas.value.height = height.value * targetDpi
