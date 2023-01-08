@@ -1,6 +1,6 @@
 # Catenary Curve - Approximates the catenary curve between two points
 
-![catenary-curve banner](public/og.png?raw=true "Catenary Curves")
+[![catenary-curve banner](public/og.png?raw=true "Catenary Curves")](https://catenary-curve.dulnan.net)
 
 **[Demo](https://catenary-curve.dulnan.net)** - **[NPM](https://www.npmjs.com/package/catenary-curve)** - **[In use](https://lazybrush.dulnan.net)**
 

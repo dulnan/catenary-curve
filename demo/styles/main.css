@@ -4,7 +4,7 @@
 
 @layer utilities {
   .h-canvas {
-    height: calc(100vh - (10 * 24px));
+    height: calc(100vh - (13 * 24px));
   }
   .image-rendering-pixelated {
     image-rendering: pixelated;
@@ -16,17 +16,22 @@
     @apply absolute top-0 left-0 w-full h-full;
   }
   .slider {
-    @apply range block w-full h-6 bg-white border px-1.5 rounded-full border-gray-300 appearance-none cursor-pointer dark:bg-gray-700;
+    @apply range block w-full h-6 bg-white border px-1.5 rounded-full border-stone-300 appearance-none cursor-pointer dark:bg-stone-700;
   }
 
   .range {
+    background: transparent !important;
+    box-shadow: inset 0px 0px 0px 20px white;
+    &::-webkit-slider-runnable-track {
+      @apply bg-white;
+    }
     &::-webkit-slider-thumb {
       -webkit-appearance: none;
-      @apply w-3 h-3 rounded-full bg-sky-500;
+      @apply w-3 h-3 rounded-full bg-sky-500 shadow-none;
     }
     &.disabled {
       &::-webkit-slider-thumb {
-        @apply bg-gray-300;
+        @apply bg-stone-300;
       }
     }
   }

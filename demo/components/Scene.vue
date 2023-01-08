@@ -1,6 +1,6 @@
 <template>
   <div
-    class="relative z-10 w-full h-canvas md:h-full overflow-hidden"
+    class="relative z-10 w-full h-canvas md:h-full overflow-hidden border-t border-gray-300 md:border-t-0""
     ref="container"
   >
     <canvas class="canvas z-40" ref="canvas"></canvas>
