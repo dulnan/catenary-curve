@@ -1,10 +1,13 @@
 # Catenary Curve - Approximates the catenary curve between two points
 
-One would assume it's easy to draw a hanging rope or chain between two points,
-but its not, especially if you want it to look realistic.
+**[Demo](https://catenary-curve.dulnan.net)** - **[NPM](https://www.npmjs.com/package/catenary-curve)** - **[In use](https://lazybrush.dulnan.net)**
 
-This library provides a function that, given two points and a chain length,
-returns an approximation of the catenary curve as quadratic curve points.
+One would assume it's easy to draw a hanging rope or chain between two points,
+but it's not, especially if you want it to look realistic.
+
+This TypeScript/JavaScript library provides a function that, given two points
+and a chain length, returns an approximation of the [catenary
+curve](https://en.wikipedia.org/wiki/Catenary) as quadratic curve points.
 
 It also provides helper methods to draw the result to a 2D canvas.
 
