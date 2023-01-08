@@ -9,14 +9,6 @@ export default defineConfig({
     })
   ],
   build: {
-    minify: 'terser',
-    terserOptions: {
-      module: true,
-      toplevel: true,
-      compress: {
-        inline: true
-      }
-    },
     outDir: 'lib',
     lib: {
       // Could also be a dictionary or array of multiple entry points
