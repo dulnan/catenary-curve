@@ -1,5 +1,7 @@
 # Catenary Curve - Approximates the catenary curve between two points
 
+![catenary-curve banner](public/og.png?raw=true "Catenary Curves")
+
 **[Demo](https://catenary-curve.dulnan.net)** - **[NPM](https://www.npmjs.com/package/catenary-curve)** - **[In use](https://lazybrush.dulnan.net)**
 
 One would assume it's easy to draw a hanging rope or chain between two points,
