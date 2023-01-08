@@ -1,6 +1,6 @@
 {
   "name": "catenary-curve",
-  "version": "2.0.1",
+  "version": "2.0.0",
   "description": "Calculate the perfect catenary between two points",
   "keywords": [
     "catenary",
