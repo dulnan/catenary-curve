@@ -1,8 +1,8 @@
 /**
  * Given two points and a length, calculate and draw the catenary.
  *
- * JavaScript implementation:
- * Copyright (c) 2018 Jan Hug <me@dulnan.net>
+ * TypeScript implementation:
+ * Copyright (c) 2018, 2023 Jan Hug <me@dulnan.net>
  * Released under the MIT license.
  *
  * ----------------------------------------------------------------------------
@@ -18,10 +18,48 @@
  * http://wa.zozuar.org/code.php?c=8Bnl
  */
 
+const EPSILON = 1e-6
+
 export interface Point {
   x: number
   y: number
 }
+
+/**
+ * The arguments for the quadraticCurveTo canvas function.
+ */
+export type QuadrativCurve = [cpx: number, cpy: number, x: number, y: number]
+
+/**
+ * The arguments for the lineTo canvas function.
+ */
+export type Line = [x: number, y: number]
+
+/**
+ * The result object if the approximation resulted in a catenary.
+ */
+export type CatenaryCurveQuadraticResult = {
+  type: 'quadraticCurve'
+  start: [x: number, y: number]
+  curves: QuadrativCurve[]
+}
+
+/**
+ * The result object if the approximation resulted in a singe line without any
+ * visible curve.
+ */
+export type CatenaryCurveLineResult = {
+  type: 'line'
+  start: [x: number, y: number]
+  lines: Line[]
+}
+
+/**
+ * Possible result from the approximation.
+ */
+export type CatenaryCurveResult =
+  | CatenaryCurveLineResult
+  | CatenaryCurveQuadraticResult
 
 export interface CatenaryOptions {
   /**
@@ -33,20 +71,6 @@ export interface CatenaryOptions {
    * Maximum amount iterations for getting catenary parameters.
    */
   iterationLimit?: number
-
-  /**
-   * Draws the individual segments as straight lines instead of curves.
-   */
-  drawLineSegments?: boolean
-}
-
-const EPSILON = 1e-6
-
-/**
- * Returns a point.
- */
-function getPoint(x: number, y: number): Point {
-  return { x, y }
 }
 
 /**
@@ -67,20 +91,23 @@ function getCurve(
   offsetY: number,
   // How many "parts" the chain should be made of.
   segments: number
-): number[][] {
-  const data: number[][] = [
+): [x: number, y: number][] {
+  const data: [x: number, y: number][] = [
+    // Calculate the first point on the curve
     [p1.x, a * Math.cosh((p1.x - offsetX) / a) + offsetY]
   ]
 
   const d = p2.x - p1.x
   const length = segments - 1
 
+  // Calculate the points in between the first and last point
   for (let i = 0; i < length; i++) {
     const x = p1.x + (d * (i + 0.5)) / length
     const y = a * Math.cosh((x - offsetX) / a) + offsetY
     data.push([x, y])
   }
 
+  // Calculate the last point on the curve
   data.push([p2.x, a * Math.cosh((p2.x - offsetX) / a) + offsetY])
 
   return data
@@ -88,26 +115,17 @@ function getCurve(
 /**
  * Draws a straight line between two points.
  *
- * @param {Array} data Even indices are x, odd are y.
- * @param {CanvasRenderingContext2D} context The context to draw to.
  */
-function drawLine(
-  data: number[][],
-  context: CanvasRenderingContext2D
-): number[][] {
-  context.moveTo(data[0][0], data[0][1])
-  for (let i = 1; i < data.length; i++) {
-    context.lineTo(data[i][0], data[i][1])
+function getLineResult(data: Line[]): CatenaryCurveLineResult {
+  return {
+    type: 'line',
+    start: data[0],
+    lines: data.slice(1)
   }
-  return data
 }
 /**
  * Determines catenary parameter.
  *
- * @param {Number} h Horizontal distance of both points.
- * @param {Number} v Vertical distance of both points.
- * @param {Number} length The catenary length.
- * @param {Number} limit Maximum amount of iterations to find parameter.
  */
 function getCatenaryParameter(
   h: number,
@@ -120,6 +138,8 @@ function getCatenaryParameter(
   let prevx = -1
   let count = 0
 
+  // Iterate until we find a suitable catenary parameter or reach the iteration
+  // limit
   while (Math.abs(x - prevx) > EPSILON && count < limit) {
     prevx = x
     x = x - (Math.sinh(x) - m * x) / (Math.cosh(x) - m)
@@ -132,53 +152,88 @@ function getCatenaryParameter(
 /**
  * Draws a quadratic curve between every calculated catenary segment,
  * so that the segments don't look like straight lines.
- *
- * @param {Array} data Even indices are x, odd are y.
- * @param {CanvasRenderingContext2D} context The context to draw to.
- *
- * @returns {Array} The original segment coordinates.
  */
-function drawCurve(
-  data: number[][],
-  context: CanvasRenderingContext2D
-): number[][] {
+function getCurveResult(data: number[][]): CatenaryCurveQuadraticResult {
   let length: number = data.length - 1
   let ox: number = data[1][0]
   let oy: number = data[1][1]
 
-  let temp: number[][] = []
-
-  context.moveTo(data[0][0], data[0][1])
+  const start: [x: number, y: number] = [data[0][0], data[0][1]]
+  const curves: QuadrativCurve[] = []
 
   for (let i = 2; i < length; i++) {
     const x = data[i][0]
     const y = data[i][1]
     const mx = (x + ox) * 0.5
     const my = (y + oy) * 0.5
-    temp.push([ox, oy, mx, my])
-    context.quadraticCurveTo(ox, oy, mx, my)
+    curves.push([ox, oy, mx, my])
     ox = x
     oy = y
   }
 
   length = data.length
-  context.quadraticCurveTo(
+  curves.push([
     data[length - 2][0],
     data[length - 2][1],
     data[length - 1][0],
     data[length - 1][1]
-  )
+  ])
 
-  return temp
+  return { type: 'quadraticCurve', start, curves }
+}
+
+/**
+ * Pass in the return value from getCatenaryCurve and your canvas context to
+ * draw the curve.
+ */
+export function drawResult(
+  result: CatenaryCurveResult,
+  context: CanvasRenderingContext2D
+) {
+  if (result.type === 'quadraticCurve') {
+    drawResultCurve(result, context)
+  } else if (result.type === 'line') {
+    drawResultLine(result, context)
+  }
+}
+
+/**
+ * Draw the curve using lineTo.
+ */
+export function drawResultLine(
+  result: CatenaryCurveLineResult,
+  context: CanvasRenderingContext2D
+) {
+  context.moveTo(...result.start)
+  for (let i = 0; i < result.lines.length; i++) {
+    context.lineTo(...result.lines[i])
+  }
+}
+
+/**
+ * Draw the curve using quadraticCurveTo.
+ */
+export function drawResultCurve(
+  result: CatenaryCurveQuadraticResult,
+  context: CanvasRenderingContext2D
+) {
+  context.moveTo(...result.start)
+
+  for (let i = 0; i < result.curves.length; i++) {
+    context.quadraticCurveTo(...result.curves[i])
+  }
 }
 
 /**
  * Get the difference for x and y axis to another point
  */
 function getDifferenceTo(p1: Point, p2: Point): Point {
-  return getPoint(p1.x - p2.x, p1.y - p2.y)
+  return { x: p1.x - p2.x, y: p1.y - p2.y }
 }
 
+/**
+ * Return the distance in pixels between two points.
+ */
 function getDistanceBetweenPoints(p1: Point, p2: Point): number {
   const diff = getDifferenceTo(p1, p2)
 
@@ -186,19 +241,26 @@ function getDistanceBetweenPoints(p1: Point, p2: Point): number {
 }
 
 /**
- * Draws a catenary given two coordinates, a length and a context.
+ * Approximates the catenary curve between two points and returns the resulting
+ * coordinates.
+ *
+ * If the curve would result in a single straight line, the approximation is
+ * skipped and the input coordinates are returned.
+ *
+ * It returns an object with a property `type` to differenciate between `line`
+ * and `quadraticCurve`. You can pass this object together with your 2D canvas
+ * context to `drawResult` to directly draw it to the canvas.
  */
-export function drawCatenaryCurve(
-  context: CanvasRenderingContext2D,
+export function getCatenaryCurve(
   point1: Point,
   point2: Point,
   chainLength: number,
   options: CatenaryOptions = {}
-): number[] | number[][] {
-  const segments = options.segments || 20
-  const iterationLimit = options.iterationLimit || 10
-  const drawLineSegments = !!options.drawLineSegments
+): CatenaryCurveResult {
+  const segments = options.segments || 25
+  const iterationLimit = options.iterationLimit || 6
 
+  // The curves are reversed
   const isFlipped = point1.x > point2.x
 
   const p1 = isFlipped ? point2 : point1
@@ -206,13 +268,9 @@ export function drawCatenaryCurve(
 
   const distance = getDistanceBetweenPoints(p1, p2)
 
-  // Prevent "expensive" catenary calculations if it would only result
-  // in a straight line.
   if (distance < chainLength) {
     const diff = p2.x - p1.x
 
-    // If the distance on the x axis of both points is too small, don't
-    // calculate a catenary.
     if (diff > 0.01) {
       const h = p2.x - p1.x
       const v = p2.y - p1.y
@@ -227,33 +285,21 @@ export function drawCatenaryCurve(
       if (isFlipped) {
         curveData.reverse()
       }
-      context.beginPath()
-      if (drawLineSegments) {
-        drawLine(curveData, context)
-      } else {
-        drawCurve(curveData, context)
-      }
-      return curveData
+      return getCurveResult(curveData)
     }
 
     const mx = (p1.x + p2.x) * 0.5
     const my = (p1.y + p2.y + chainLength) * 0.5
 
-    return drawLine(
-      [
-        [p1.x, p1.y],
-        [mx, my],
-        [p2.x, p2.y]
-      ],
-      context
-    )
+    return getLineResult([
+      [p1.x, p1.y],
+      [mx, my],
+      [p2.x, p2.y]
+    ])
   }
 
-  return drawLine(
-    [
-      [p1.x, p1.y],
-      [p2.x, p2.y]
-    ],
-    context
-  )
+  return getLineResult([
+    [p1.x, p1.y],
+    [p2.x, p2.y]
+  ])
 }
