@@ -1,33 +1,150 @@
-# Catenary Curve - Calculate the ideal catenary between two points
+# Catenary Curve - Approximates the catenary curve between two points
 
-Given two points and a length, this library will calculate and draw the catenary
-between two points, the "correct" way, so that it behaves natural (technically).
+One would assume it's easy to draw a hanging rope or chain between two points,
+but its not, especially if you want it to look realistic.
+
+This library provides a function that, given two points and a chain length,
+returns an approximation of the catenary curve as quadratic curve points.
+
+It also provides helper methods to draw the result to a 2D canvas.
 
 ## How to use
 
-```javascript
-import { Catenary, Point } from 'catenary-curve'
+```bash
+npm install --save catenary-curve
+```
 
-// This is optional, you can also use a simple { x: 200, y: 300 } object.
-let p1 = new Point(200, 300)
-let p2 = new Point(250, 400)
+```typescript
+import { getCatenaryCurve, drawResult, Point } from 'catenary-curve'
 
-let chain = new Catenary({
-  segments: 50,
-  iterationLimit: 100
-})
+const p1: Point = { x: 200, y: 300 }
+const p2: Point = { x: 250, y: 400 }
 
 const context = canvas.getContext('2d')
 
-// The drawToCanvas function will only call the actual draw function (moveTo,
-// lineTo, quadraticCurveTo), so you have to call beginPath() and stroke()
-// yourself.
 context.beginPath()
 context.lineWidth = 1
 context.strokeStyle = 'black'
-chain.drawToCanvas(context, p1, p2, 500)
+
+const result = getCatenaryCurve(p1, p2, 500)
+drawResult(result, context)
+
 context.stroke()
 ```
+
+## Exports
+
+### getCatenaryCurve
+
+```typescript
+function getCatenaryCurve(
+  point1: Point,
+  point2: Point,
+  chainLength: number,
+  options?: CatenaryOptions
+): CatenaryCurveResult
+```
+
+Provide the start and end point and the length of the chain. It returns an
+object with the approximated values.
+
+```json
+{
+  "type": "quadraticCurve",
+  "start": [
+    480.3333333333333,
+    213.5920866272993
+  ],
+  "curves": [
+    [
+      485.2094017094017,
+      237.1602015730591,
+      490.0854700854701,
+      258.6001522901396
+    ],
+    [
+      846.0384615384615,
+      202.65311976627885,
+      850.9145299145299,
+      175.99552022287116
+    ],
+    [
+      855.7905982905983,
+      149.33792067946348,
+      860.6666666666666,
+      120.05645761711651
+    ]
+  ]
+}
+```
+
+This resulting object can be passed to the `drawResult` method:
+
+```typescript
+const result = getCatenaryCurve(p1, p2, 500)
+drawResult(result, context)
+```
+
+Alternatively you can also do the drawing yourself:
+
+```typescript
+const result = getCatenaryCurve(p1, p2, 500)
+
+context.moveTo(result.start[0], result.start[1])
+
+for (let i = 0; i < result.curves.length; i++) {
+  context.quadraticCurveTo(
+    result.curves[i][0], // cpx
+    result.curves[i][1], // cpy
+    result.curves[i][2], // x
+    result.curves[i][3], // y
+  )
+}
+```
+
+#### Straight lines
+
+Here both the start and end points have the same position on the Y axias and
+their distance on the X axis is exactly 300, the same as the chain length. So
+there is no curve, only a straight line. In this case the curve is not
+calcuated and the `line` result type is returned:
+
+```typescript
+const result = getCatenaryCurve({ x: 100, y: 300 }, { x: 400, y: 300 }, 300)
+```
+
+```json
+{
+  "type": "line",
+  "start": [
+    100,
+    300
+  ],
+  "lines": [
+    [
+      400,
+      300
+    ]
+  ]
+}
+```
+
+### Options
+
+#### options.segments?: number
+
+The amount of segments used to approximate the curve. The higher the value the
+more accurate it will be, but will require more calculations.
+
+A value of 25 is usually enough for a very realistic approximation. Values
+above that only show barely any noticeable differences.
+
+#### options.iterationLimit?: number
+
+The number of iterations used to determine the catenary parameter. A higher
+value will yield more accurate curves, but requires more calculations.
+
+A value around 5 is usually enough.
 
 ## Acknowledgement
 

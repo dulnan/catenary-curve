@@ -16,6 +16,7 @@
         <a
           class="text-sky-500 font-bold uppercase underline underline-offset-4 hover:text-sky-800"
           :href="link.href"
+          target="_blank"
           >{{ link.text }}</a
         >
       </li>
