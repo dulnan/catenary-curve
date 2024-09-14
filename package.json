@@ -21,7 +21,8 @@
   "exports": {
     ".": {
       "import": "./lib/catenary-curve.js",
-      "require": "./lib/catenary-curve.umd.cjs"
+      "require": "./lib/catenary-curve.umd.cjs",
+      "types": "./lib/main.d.ts"
     }
   },
   "repository": "https://github.com/dulnan/catenary-curve",
